@@ -11,14 +11,17 @@ from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from PIL import Image
 
 # --- Global Matplotlib Style: Dark Theme ---
-plt.rcParams.update({
-    'axes.edgecolor': 'white',
-    'xtick.color': 'white',
-    'ytick.color': 'white',
-    'figure.facecolor': 'black',
-    'axes.labelcolor': 'white',
-    'savefig.facecolor': 'black'
-})
+plt.rcParams.update(
+    {
+        "axes.edgecolor": "white",
+        "xtick.color": "white",
+        "ytick.color": "white",
+        "figure.facecolor": "black",
+        "axes.labelcolor": "white",
+        "savefig.facecolor": "black",
+    }
+)
+
 
 # --- Utility to get most recent model directory ---
 def get_latest_model_dir(base_dir):
@@ -32,17 +35,24 @@ def get_latest_model_dir(base_dir):
     latest_subdir = max(subdirs, key=os.path.getmtime)
     return latest_subdir
 
+
 # --- Paths ---
-CLASSIFIER_MODEL_DIR = get_latest_model_dir('models/classifier')
-DIAGNOSIS_MODEL_DIR = get_latest_model_dir('models/diagnosis')
+CLASSIFIER_MODEL_DIR = get_latest_model_dir("models/classifier")
+DIAGNOSIS_MODEL_DIR = get_latest_model_dir("models/diagnosis")
 
-CLASSIFIER_MODEL_PATH = os.path.join(CLASSIFIER_MODEL_DIR, 'cortex-classifier.keras')
-DIAGNOSIS_MODEL_PATH = os.path.join(DIAGNOSIS_MODEL_DIR, 'cortex-classifier.keras')  # note: name reused
+CLASSIFIER_MODEL_PATH = os.path.join(CLASSIFIER_MODEL_DIR, "cortex-classifier.keras")
+DIAGNOSIS_MODEL_PATH = os.path.join(
+    DIAGNOSIS_MODEL_DIR, "cortex-classifier.keras"
+)  # note: name reused
 
-CLASSIFIER_CLASSES_PATH = os.path.join(CLASSIFIER_MODEL_DIR, 'cotex-classifier-class_indices.json')
-DIAGNOSIS_CLASSES_PATH = os.path.join(DIAGNOSIS_MODEL_DIR, 'cotex-diagnosis-class_indices.json')
+CLASSIFIER_CLASSES_PATH = os.path.join(
+    CLASSIFIER_MODEL_DIR, "cotex-classifier-class_indices.json"
+)
+DIAGNOSIS_CLASSES_PATH = os.path.join(
+    DIAGNOSIS_MODEL_DIR, "cotex-diagnosis-class_indices.json"
+)
 
-TEST_IMAGE_ROOT = 'data/test'
+TEST_IMAGE_ROOT = "data/test"
 
 # --- Load Models ---
 classifier_model = load_model(CLASSIFIER_MODEL_PATH)
@@ -54,20 +64,24 @@ with open(CLASSIFIER_CLASSES_PATH) as f:
 with open(DIAGNOSIS_CLASSES_PATH) as f:
     diagnosis_labels = {v: k for k, v in json.load(f).items()}
 
+
 # --- Preprocessing ---
 def preprocess_image(image_path, target_size=(149, 149)):
     image = load_img(image_path, target_size=target_size)
     image = img_to_array(image) / 255.0
     return np.expand_dims(image, axis=0)
 
+
 # --- Load Images ---
 image_files = [
     os.path.join(root, f)
     for root, _, files in os.walk(TEST_IMAGE_ROOT)
-    for f in files if f.lower().endswith(('.png', '.jpg', '.jpeg'))
+    for f in files
+    if f.lower().endswith((".png", ".jpg", ".jpeg"))
 ]
 if not image_files:
     raise FileNotFoundError("No test images found.")
+
 
 # --- Showcase with matplotlib ---
 class ImageShowcase:
@@ -76,11 +90,11 @@ class ImageShowcase:
         self.gs = gridspec.GridSpec(2, 1, height_ratios=[4, 1.5])
         self.ax_img = self.fig.add_subplot(self.gs[0])
         self.ax_text = self.fig.add_subplot(self.gs[1])
-        self.ax_text.axis('off')
+        self.ax_text.axis("off")
 
-        self.fig.patch.set_facecolor('black')
-        self.ax_img.set_facecolor('black')
-        self.ax_text.set_facecolor('black')
+        self.fig.patch.set_facecolor("black")
+        self.ax_img.set_facecolor("black")
+        self.ax_text.set_facecolor("black")
 
         # Image navigation state
         self.current_index = -1
@@ -106,7 +120,7 @@ class ImageShowcase:
         self.diagnosis_model_name = os.path.basename(DIAGNOSIS_MODEL_DIR)
 
         self.show_next(1)
-        self.fig.canvas.mpl_connect('key_press_event', self.on_key)
+        self.fig.canvas.mpl_connect("key_press_event", self.on_key)
         plt.show()
 
     def autoplay_step(self):
@@ -116,7 +130,9 @@ class ImageShowcase:
 
     def show_next(self, direction=1):
         self.current_index += direction
-        self.current_index = max(0, min(len(self.shuffled_images) - 1, self.current_index))
+        self.current_index = max(
+            0, min(len(self.shuffled_images) - 1, self.current_index)
+        )
         image_path = self.shuffled_images[self.current_index]
 
         if image_path in self.prediction_cache:
@@ -138,7 +154,9 @@ class ImageShowcase:
             classifier_pred = classifier_labels[classifier_pred_idx]
             diagnosis_pred = diagnosis_labels[diagnosis_pred_idx]
             actual_diagnosis = os.path.basename(os.path.dirname(image_path))
-            actual_classifier = "normal" if actual_diagnosis == "notumor" else "abnormal"
+            actual_classifier = (
+                "normal" if actual_diagnosis == "notumor" else "abnormal"
+            )
 
             if classifier_pred == actual_classifier:
                 if classifier_pred == "normal":
@@ -165,7 +183,7 @@ class ImageShowcase:
                 "classifier_time_ms": classifier_time,
                 "diagnosis_time_ms": diagnosis_time,
                 "result_tag": result_tag,
-                "result_color": result_color
+                "result_color": result_color,
             }
             self.prediction_cache[image_path] = result
 
@@ -184,43 +202,55 @@ class ImageShowcase:
 
         # --- Display Image ---
 
-
-
-
         self.ax_img.clear()
         self.ax_img.set_title(
-            f"Image {self.current_index + 1} of {len(self.shuffled_images)}\n"
-            f"Classifier: {result['classifier_pred']} | actual: {result['actual_classifier']}\n"
-            #f"Diagnosis: {result['diagnosis_pred']} | actual: {result['actual_diagnosis']}",
-            ,  ha='center', va='bottom',
-            fontsize=12, pad=20, color='white'
+            # f"Image {self.current_index + 1} of {len(self.shuffled_images)}\n"
+            f"Classifier: {result['classifier_pred']} | Actual: {result['actual_classifier']}\n",
+            # f"Diagnosis: {result['diagnosis_pred']} | actual: {result['actual_diagnosis']}",
+            ha="center",
+            va="bottom",
+            fontsize=12,
+            pad=20,
+            color="white",
         )
 
         image = Image.open(image_path).convert("RGB").resize((512, 512))
         self.ax_img.imshow(image)
-        self.ax_img.axis('off')
+        self.ax_img.axis("off")
 
         # Result box
         box_x, box_y = 0.95, 0.05
-        self.ax_img.add_patch(patches.Rectangle(
-            (box_x - 0.08, box_y - 0.05), 0.08, 0.05,
-            transform=self.ax_img.transAxes,
-            facecolor=result['result_color'], edgecolor='black', linewidth=1
-        ))
+        self.ax_img.add_patch(
+            patches.Rectangle(
+                (box_x - 0.08, box_y - 0.05),
+                0.08,
+                0.05,
+                transform=self.ax_img.transAxes,
+                facecolor=result["result_color"],
+                edgecolor="black",
+                linewidth=1,
+            )
+        )
         self.ax_img.text(
-            box_x - 0.04, box_y - 0.025, result['result_tag'],
+            box_x - 0.04,
+            box_y - 0.025,
+            result["result_tag"],
             transform=self.ax_img.transAxes,
-            ha='center', va='center', fontsize=10, color='white', weight='bold'
+            ha="center",
+            va="center",
+            fontsize=10,
+            color="white",
+            weight="bold",
         )
 
         # --- Text Panel ---
         self.ax_text.clear()
-        self.ax_text.axis('off')
+        self.ax_text.axis("off")
 
         def format_probs(probs, label_map):
-            return " | ".join([
-                f"{label_map[i]}: {probs[i]:.2f}" for i in range(len(probs))
-            ])
+            return " | ".join(
+                [f"{label_map[i]}: {probs[i]:.2f}" for i in range(len(probs))]
+            )
 
         text_lines = [
             f"Processed: {self.total} | Accuracy: {(self.correct / self.total) * 100:.2f}%",
@@ -237,12 +267,18 @@ class ImageShowcase:
             f"Classifier Model: {self.classifier_model_name}",
             f"Diagnosis Model: {self.diagnosis_model_name}",
             "",
-            "[a] autoplay | [space]/→ next | ← previous | q quit"
+            "[a] autoplay | [space]/→ next | ← previous | q quit",
         ]
         full_text = "\n".join(text_lines)
         self.ax_text.text(
-            0.01, 1.0, full_text,
-            ha='left', va='top', fontsize=10, family='monospace', color='white'
+            0.01,
+            1.0,
+            full_text,
+            ha="left",
+            va="top",
+            fontsize=10,
+            family="monospace",
+            color="white",
         )
 
         self.fig.tight_layout()
@@ -253,15 +289,16 @@ class ImageShowcase:
         self.autoplay_enabled = False
         self.timer.stop()
 
-        if event.key == ' ' or event.key == 'right':
+        if event.key == " " or event.key == "right":
             self.show_next(1)
-        elif event.key == 'left':
+        elif event.key == "left":
             self.show_next(-1)
-        elif event.key.lower() == 'q':
+        elif event.key.lower() == "q":
             plt.close(self.fig)
-        elif event.key.lower() == 'a':  # start autoplay
+        elif event.key.lower() == "a":  # start autoplay
             self.autoplay_enabled = True
             self.timer.start()
+
 
 # --- Run ---
 if __name__ == "__main__":
