@@ -10,6 +10,10 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from PIL import Image
 
+
+CONST_REFRESH_MS = 100
+
+
 # --- Global Matplotlib Style: Dark Theme ---
 plt.rcParams.update(
     {
@@ -112,9 +116,9 @@ class ImageShowcase:
 
         # Auto play state
         self.autoplay_enabled = False
-        self.timer = self.fig.canvas.new_timer(interval=1000)
+        self.timer = self.fig.canvas.new_timer(interval=CONST_REFRESH_MS)
         self.timer.add_callback(self.autoplay_step)
-
+        self.timer.single_shot = False
         # Model Version Info
         self.classifier_model_name = os.path.basename(CLASSIFIER_MODEL_DIR)
         self.diagnosis_model_name = os.path.basename(DIAGNOSIS_MODEL_DIR)
@@ -126,7 +130,6 @@ class ImageShowcase:
     def autoplay_step(self):
         if self.autoplay_enabled:
             self.show_next(1)
-            self.timer.start()
 
     def show_next(self, direction=1):
         self.current_index += direction
