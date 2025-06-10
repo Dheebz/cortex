@@ -1,0 +1,11 @@
+Model Name: cortex-cnn-lvl-2
+Model Type: cnn
+Epochs: 50
+Batch Size: 32
+Learning Rate: 0.001
+Beta1: 0.95
+Beta2: 0.999
+Random State: 42
+Image Size: (149, 149)
+Training Data Size: 5728
+Validation Data Size: 1312
